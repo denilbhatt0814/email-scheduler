@@ -8,8 +8,9 @@ import (
 )
 
 type RestHandler struct {
-	App    *fiber.App
-	DB     *gorm.DB
-	Cron   service.CronService
-	Config config.AppConfig
+	App         *fiber.App
+	DB          *gorm.DB
+	Cron        service.CronService
+	MailService service.MailService
+	Config      config.AppConfig
 }

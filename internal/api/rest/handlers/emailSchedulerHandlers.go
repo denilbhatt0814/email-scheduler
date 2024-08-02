@@ -19,9 +19,10 @@ func SetupEmailEmailScheduleHandler(rh *rest.RestHandler) {
 	app := rh.App
 
 	svc := service.EmailSchedulerService{
-		Repo:   repository.NewScheduleRepository(rh.DB),
-		Cron:   rh.Cron,
-		Config: rh.Config,
+		Repo:        repository.NewScheduleRepository(rh.DB),
+		Cron:        rh.Cron,
+		MailService: rh.MailService,
+		Config:      rh.Config,
 	}
 
 	handler := EmailScheduleHandler{

@@ -31,12 +31,14 @@ func StartServer(config config.AppConfig) {
 
 	// initalizing cron
 	cron := service.NewCronService()
+	mailsvc := service.NewMailService(config)
 
 	rh := &rest.RestHandler{
-		App:    app,
-		DB:     db,
-		Cron:   cron,
-		Config: config,
+		App:         app,
+		DB:          db,
+		Cron:        cron,
+		MailService: mailsvc,
+		Config:      config,
 	}
 	setupRoutes(rh)
 

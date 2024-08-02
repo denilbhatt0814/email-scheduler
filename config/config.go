@@ -8,9 +8,11 @@ import (
 )
 
 type AppConfig struct {
-	ServerPort string
-	Dsn        string // DB_URL
-	AppSecret  string
+	ServerPort   string
+	Dsn          string // DB_URL
+	AppSecret    string
+	ResendApiKey string
+	FromMail     string
 }
 
 func SetupEnv() (cfg AppConfig, err error) {
@@ -34,9 +36,21 @@ func SetupEnv() (cfg AppConfig, err error) {
 		return AppConfig{}, errors.New("env variables not found")
 	}
 
+	resendApiKey := os.Getenv("RESEND_API_KEY")
+	if len(appSecret) < 1 {
+		return AppConfig{}, errors.New("env variables not found")
+	}
+
+	fromMail := os.Getenv("FROM_MAIL")
+	if len(appSecret) < 1 {
+		return AppConfig{}, errors.New("env variables not found")
+	}
+
 	return AppConfig{
-		ServerPort: httpPort,
-		Dsn:        dsn,
-		AppSecret:  appSecret,
+		ServerPort:   httpPort,
+		Dsn:          dsn,
+		AppSecret:    appSecret,
+		ResendApiKey: resendApiKey,
+		FromMail:     fromMail,
 	}, nil
 }

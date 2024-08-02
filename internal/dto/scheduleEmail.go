@@ -6,3 +6,9 @@ type CreateScheduledEmail struct {
 	Body      string `json:"body"`
 	Schedule  string `json:"schedule_expression"`
 }
+
+type Email struct {
+	Recipient string `json:"recipient"`
+	Subject   string `json:"subject"`
+	Body      string `json:"body"`
+}

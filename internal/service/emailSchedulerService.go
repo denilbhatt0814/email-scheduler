@@ -2,7 +2,6 @@ package service
 
 import (
 	"errors"
-	"fmt"
 	"log"
 
 	"github.com/denilbhatt0814/email-scheduler/config"
@@ -12,9 +11,10 @@ import (
 )
 
 type EmailSchedulerService struct {
-	Repo   repository.ScheduleRepository
-	Cron   CronService
-	Config config.AppConfig
+	Repo        repository.ScheduleRepository
+	Cron        CronService
+	MailService MailService
+	Config      config.AppConfig
 }
 
 func (s *EmailSchedulerService) ScheduleEmail(input *dto.CreateScheduledEmail) error {
@@ -28,6 +28,7 @@ func (s *EmailSchedulerService) ScheduleEmail(input *dto.CreateScheduledEmail) e
 
 	job := emailJob{
 		sEmail,
+		s.MailService,
 	}
 	jobID, err := s.Cron.ScheduleJob(sEmail.Schedule, job)
 	if err != nil {
@@ -79,8 +80,16 @@ func (s *EmailSchedulerService) DeleteScheduledEmail(id int) error {
 
 type emailJob struct {
 	domain.ScheduledEmail
+	MailService MailService
 }
 
 func (j emailJob) Run() {
-	fmt.Println(j)
+	err := j.MailService.SendEmail(dto.Email{
+		Recipient: j.Recipient,
+		Body:      j.Body,
+		Subject:   j.Subject,
+	})
+	if err != nil {
+		log.Println("Error sending email:", j, err)
+	}
 }
