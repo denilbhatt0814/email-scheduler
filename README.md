@@ -2,6 +2,7 @@
 
 running instructions:\
 make sure to have docker\
+add a new .env file and copy all vars from .env.example\
 run `docker compose up`\
 run `make server`\
 test out apis\
