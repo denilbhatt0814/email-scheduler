@@ -6,6 +6,7 @@ import (
 	"github.com/denilbhatt0814/email-scheduler/config"
 	"github.com/denilbhatt0814/email-scheduler/internal/api/rest"
 	"github.com/denilbhatt0814/email-scheduler/internal/api/rest/handlers"
+	"github.com/denilbhatt0814/email-scheduler/internal/domain"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -20,8 +21,8 @@ func StartServer(config config.AppConfig) {
 	}
 
 	log.Println("Database connected")
-	// run migrations // TODO:
-	err = db.AutoMigrate()
+	// run migrations
+	err = db.AutoMigrate(&domain.ScheduledEmail{})
 	if err != nil {
 		log.Fatalf("Error on running migration: %v", err.Error())
 	}
