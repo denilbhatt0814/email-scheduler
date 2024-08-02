@@ -11,19 +11,20 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type ScheduleHandler struct {
-	svc service.ScheduleService
+type EmailScheduleHandler struct {
+	svc service.EmailSchedulerService
 }
 
-func SetupScheduleHandler(rh *rest.RestHandler) {
+func SetupEmailEmailScheduleHandler(rh *rest.RestHandler) {
 	app := rh.App
 
-	svc := service.ScheduleService{
+	svc := service.EmailSchedulerService{
 		Repo:   repository.NewScheduleRepository(rh.DB),
+		Cron:   rh.Cron,
 		Config: rh.Config,
 	}
 
-	handler := ScheduleHandler{
+	handler := EmailScheduleHandler{
 		svc: svc,
 	}
 
@@ -38,12 +39,21 @@ func SetupScheduleHandler(rh *rest.RestHandler) {
 	app.Delete("/scheduled-emails/:id", handler.DeleteScheduledEmail)
 }
 
-func (h *ScheduleHandler) ScheduleEmail(ctx *fiber.Ctx) error {
+func (h *EmailScheduleHandler) ScheduleEmail(ctx *fiber.Ctx) error {
 	scheduledEmail := dto.CreateScheduledEmail{}
 	err := ctx.BodyParser(&scheduledEmail)
+
 	if err != nil {
 		return ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{
 			"message": "please provide valid inputs",
+		})
+	}
+
+	err = h.svc.Cron.Parse(scheduledEmail.Schedule)
+	if err != nil {
+		return ctx.Status(http.StatusBadRequest).JSON(&fiber.Map{
+			"message": "please provide valid cron expression for schedule - Minute | Hour | Dom | Month | Dow",
+			"error":   err.Error(),
 		})
 	}
 
@@ -59,7 +69,7 @@ func (h *ScheduleHandler) ScheduleEmail(ctx *fiber.Ctx) error {
 	})
 }
 
-func (h *ScheduleHandler) GetScheduledEmails(ctx *fiber.Ctx) error {
+func (h *EmailScheduleHandler) GetScheduledEmails(ctx *fiber.Ctx) error {
 
 	emails, err := h.svc.GetScheduledEmails()
 	if err != nil {
@@ -74,7 +84,7 @@ func (h *ScheduleHandler) GetScheduledEmails(ctx *fiber.Ctx) error {
 		"data":    emails,
 	})
 }
-func (h *ScheduleHandler) GetScheduledEmail(ctx *fiber.Ctx) error {
+func (h *EmailScheduleHandler) GetScheduledEmail(ctx *fiber.Ctx) error {
 	id, _ := strconv.Atoi(ctx.Params("id"))
 
 	email, err := h.svc.GetScheduledEmail(id)
@@ -91,7 +101,7 @@ func (h *ScheduleHandler) GetScheduledEmail(ctx *fiber.Ctx) error {
 	})
 
 }
-func (h *ScheduleHandler) DeleteScheduledEmail(ctx *fiber.Ctx) error {
+func (h *EmailScheduleHandler) DeleteScheduledEmail(ctx *fiber.Ctx) error {
 	id, _ := strconv.Atoi(ctx.Params("id"))
 
 	err := h.svc.DeleteScheduledEmail(id)

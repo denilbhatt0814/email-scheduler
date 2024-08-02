@@ -7,6 +7,7 @@ import (
 	"github.com/denilbhatt0814/email-scheduler/internal/api/rest"
 	"github.com/denilbhatt0814/email-scheduler/internal/api/rest/handlers"
 	"github.com/denilbhatt0814/email-scheduler/internal/domain"
+	"github.com/denilbhatt0814/email-scheduler/internal/service"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -28,9 +29,13 @@ func StartServer(config config.AppConfig) {
 	}
 	log.Println("migration was succefull")
 
+	// initalizing cron
+	cron := service.NewCronService()
+
 	rh := &rest.RestHandler{
 		App:    app,
 		DB:     db,
+		Cron:   cron,
 		Config: config,
 	}
 	setupRoutes(rh)
@@ -39,5 +44,5 @@ func StartServer(config config.AppConfig) {
 }
 
 func setupRoutes(rh *rest.RestHandler) {
-	handlers.SetupScheduleHandler(rh)
+	handlers.SetupEmailEmailScheduleHandler(rh)
 }

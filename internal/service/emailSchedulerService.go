@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"log"
 
 	"github.com/denilbhatt0814/email-scheduler/config"
@@ -10,12 +11,13 @@ import (
 	"github.com/denilbhatt0814/email-scheduler/internal/repository"
 )
 
-type ScheduleService struct {
+type EmailSchedulerService struct {
 	Repo   repository.ScheduleRepository
+	Cron   CronService
 	Config config.AppConfig
 }
 
-func (s *ScheduleService) ScheduleEmail(input *dto.CreateScheduledEmail) error {
+func (s *EmailSchedulerService) ScheduleEmail(input *dto.CreateScheduledEmail) error {
 
 	sEmail := domain.ScheduledEmail{
 		Recipient: input.Recipient,
@@ -23,6 +25,16 @@ func (s *ScheduleService) ScheduleEmail(input *dto.CreateScheduledEmail) error {
 		Body:      input.Body,
 		Schedule:  input.Schedule,
 	}
+
+	job := emailJob{
+		sEmail,
+	}
+	jobID, err := s.Cron.ScheduleJob(sEmail.Schedule, job)
+	if err != nil {
+		return errors.New("error scheduling schedule email")
+	}
+
+	sEmail.JobID = jobID
 
 	scheduledEmail, err := s.Repo.CreateEmailSchedule(sEmail)
 	if err != nil {
@@ -33,7 +45,7 @@ func (s *ScheduleService) ScheduleEmail(input *dto.CreateScheduledEmail) error {
 	return nil
 }
 
-func (s *ScheduleService) GetScheduledEmails() ([]*domain.ScheduledEmail, error) {
+func (s *EmailSchedulerService) GetScheduledEmails() ([]*domain.ScheduledEmail, error) {
 	emails, err := s.Repo.FindScheduledEmails()
 	if err != nil {
 		return nil, err
@@ -42,7 +54,7 @@ func (s *ScheduleService) GetScheduledEmails() ([]*domain.ScheduledEmail, error)
 	return emails, nil
 }
 
-func (s *ScheduleService) GetScheduledEmail(id int) (*domain.ScheduledEmail, error) {
+func (s *EmailSchedulerService) GetScheduledEmail(id int) (*domain.ScheduledEmail, error) {
 	email, err := s.Repo.FindScheduledEmailById(id)
 	if err != nil {
 		return nil, errors.New("scheduled email does not exist")
@@ -51,7 +63,7 @@ func (s *ScheduleService) GetScheduledEmail(id int) (*domain.ScheduledEmail, err
 	return email, nil
 }
 
-func (s *ScheduleService) DeleteScheduledEmail(id int) error {
+func (s *EmailSchedulerService) DeleteScheduledEmail(id int) error {
 	_, err := s.Repo.FindScheduledEmailById(id)
 	if err != nil {
 		return errors.New("schduled email does not exist")
@@ -63,4 +75,12 @@ func (s *ScheduleService) DeleteScheduledEmail(id int) error {
 	}
 
 	return nil
+}
+
+type emailJob struct {
+	domain.ScheduledEmail
+}
+
+func (j emailJob) Run() {
+	fmt.Println(j)
 }
